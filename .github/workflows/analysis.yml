@@ -1,0 +1,64 @@
+name: Quick Checks
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: quick-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Format & Static Analysis
+    runs-on: ubuntu-latest
+    container:
+      image: debian:stable-slim
+      options: --user root
+
+    steps:
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            clang-format \
+            clang-tools \
+            cppcheck \
+            git
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Check code formatting
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          files=$(git ls-files '*.cpp' '*.h' '*.hpp' 2>/dev/null)
+          if [ -n "$files" ]; then
+            echo "$files" | xargs clang-format -style=file -output-replacements-xml | grep -q '<replacement ' && (
+              echo "Format errors detected";
+              exit 1
+            ) || echo "Format OK"
+          fi
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 \
+            --output-file=cppcheck-report.txt EdgeCore.cpp cmake/
+
+      - name: Run clang-tidy
+        run: |
+          clang-tidy -checks=-*,readability-*,bugprone-*,clang-analyzer-* EdgeCore.cpp
+
+      - name: Upload analysis reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quick-analysis
+          path: cppcheck-report.txt
+          retention-days: 30

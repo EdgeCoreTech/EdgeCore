@@ -1,0 +1,29 @@
+{
+    "name": "EdgeCore Development Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "options": [
+             "--network=host"
+        ]
+    },
+    "runArgs": [
+        "--network=host"
+    ],
+    "workspaceFolder": "/workspaces/EdgeCore",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "zsh",
+                "cmake.options.statusBarVisibility": "visible"
+            },
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "unifiedjs.vscode-mdx",
+                "esbenp.prettier-vscode",
+                "ms-vscode-remote.vscode-remote-extensionpack",
+                "ms-vscode.cpptools-extension-pack",
+                "xaver.clang-format"
+            ]
+        }
+    }
+}
