@@ -1,0 +1,63 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+            }
+        },
+        {
+            "name": "linux-x86_64-Debug",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "linux-x86_64-Release",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "gcc-x86_64-Debug",
+            "displayName": "GCC x86_64 Debug",
+            "inherits": "linux-x86_64-Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/gcc-x86_64.cmake"
+            }
+        },
+        {
+            "name": "gcc-x86_64-Release",
+            "displayName": "GCC x86_64 Release",
+            "inherits": "linux-x86_64-Release",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/gcc-x86_64.cmake"
+            }
+        },
+        {
+            "name": "clang-x86_64-Debug",
+            "displayName": "Clang x86_64 Debug",
+            "inherits": "linux-x86_64-Debug",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/clang-x86_64.cmake"
+            }
+        },
+        {
+            "name": "clang-x86_64-Release",
+            "displayName": "Clang x86_64 Release",
+            "inherits": "linux-x86_64-Release",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/clang-x86_64.cmake"
+            }
+        }
+    ]
+}

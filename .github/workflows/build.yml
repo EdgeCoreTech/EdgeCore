@@ -1,0 +1,82 @@
+name: Build CMake Presets
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    container:
+      image: debian:stable-slim
+      options: --user root
+    strategy:
+      fail-fast: false
+      matrix:
+        preset:
+          - gcc-x86_64-Debug
+          - gcc-x86_64-Release
+          - clang-x86_64-Debug
+          - clang-x86_64-Release
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            cmake \
+            ninja-build \
+            gcc \
+            g++ \
+            clang \
+            gcovr \
+            git
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Configure CMake preset
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build preset
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Run tests
+        run: ctest --preset ${{ matrix.preset }} --parallel --output-on-failure
+
+      - name: Generate code coverage report
+        if: contains(matrix.preset, 'Debug')
+        run: |
+          cd out/build/${{ matrix.preset }}
+          gcovr --root ../../../../ --html coverage.html --print-summary
+
+      - name: Upload coverage report
+        if: contains(matrix.preset, 'Debug')
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.preset }}
+          path: out/build/${{ matrix.preset }}/coverage.html
+          retention-days: 1
+
+      - name: Package preset
+        run: cpack --preset ${{ matrix.preset }}
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.preset }}
+          path: out/build/${{ matrix.preset }}/
+          retention-days: 1
